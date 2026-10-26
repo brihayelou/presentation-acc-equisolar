@@ -520,5 +520,135 @@ document.addEventListener('DOMContentLoaded', async function() {
     template.textContent = JSON.stringify(source);
   })();
   </script>
+  <script id="crm-acc-patch">
+  /* CRM ACC (Airtable via Make) — étape 1.
+     Ouverte depuis une fiche Airtable (?prospect=rec…&commercial=rec…), la fiche rendez-vous
+     est envoyée au webhook Make « ACC – 2 – Fiche enregistrée » au lieu du Google Sheets.
+     « Enregistré » ne s'affiche que si Make répond ok:true. Sans réseau, la fiche est gardée
+     sur l'appareil et renvoyée automatiquement. Sans paramètres, comportement d'origine. */
+  (() => {
+    const template = document.querySelector('script[type="__bundler/template"]');
+    if (!template) return;
+    let source;
+    try { source = JSON.parse(template.textContent); } catch (_) { return; }
+    if (source.includes('_crmSend(')) return;
+
+    const methods = [
+      "  _crm() {",
+      "    if (this._crmParams !== undefined) return this._crmParams;",
+      "    let found = null;",
+      "    try {",
+      "      const q = new URLSearchParams(window.location.search);",
+      "      const valid = (v) => /^rec[A-Za-z0-9]{14}$/.test(v || '');",
+      "      const commercial = q.get('commercial'), prospect = q.get('prospect');",
+      "      if (valid(commercial)) found = { commercial: commercial, prospect: valid(prospect) ? prospect : '' };",
+      "    } catch (_) {}",
+      "    this._crmParams = found;",
+      "    return found;",
+      "  }",
+      "  _crmPayload(f) {",
+      "    const c = this._crm();",
+      "    const num = (v) => { const t = String(v || '').replace(/\\s/g, '').replace(',', '.'); if (!t) return ''; const n = Number(t); return Number.isFinite(n) ? n : ''; };",
+      "    const conso = num(f.consoKwh), tarif = num(f.tarif);",
+      "    const tarifMwh = tarif === '' ? '' : Math.round((f.tarifUnite === 'kwh' ? tarif * 1000 : tarif) * 1000) / 1000;",
+      "    const clean = (v) => String(v || '').trim();",
+      "    const d = { secret: 'acc_-gSkHBAQQlWc5YQW6SVW5brr', commercial: c.commercial,",
+      "      entreprise: clean(f.entreprise), contact: clean(f.contact), mail: clean(f.mail), tel: clean(f.tel),",
+      "      rue: clean(f.rue), cp: clean(f.cp), ville: clean(f.ville), activite: clean(f.activite),",
+      "      consoKwh: String(conso), tarifMwh: String(tarifMwh), horaires: f.horaires || '', notes: clean(f.notes) };",
+      "    if (c.prospect) d.prospect = c.prospect;",
+      "    return d;",
+      "  }",
+      "  async _crmSend(d) {",
+      "    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;",
+      "    const timer = ctrl ? setTimeout(() => ctrl.abort(), 20000) : null;",
+      "    let r;",
+      "    try { r = await fetch('https://hook.eu1.make.com/xvpieyqxju85n6dpkhcu9rqigra1fgog', { method: 'POST', body: new URLSearchParams(d), signal: ctrl ? ctrl.signal : undefined }); }",
+      "    catch (_) { return { kind: 'network' }; }",
+      "    finally { if (timer) clearTimeout(timer); }",
+      "    let j = null;",
+      "    try { j = await r.json(); } catch (_) {}",
+      "    if (j && j.ok === true) return { kind: 'ok', action: j.action };",
+      "    if (r.status === 403 || r.status === 404 || (j && j.ok === false)) return { kind: 'refused', error: (j && j.erreur) || String(r.status) };",
+      "    if (r.status >= 500 || r.status === 429 || r.status === 408) return { kind: 'network' };",
+      "    return { kind: 'unknown' };",
+      "  }",
+      "  _crmLoad(key) { try { const v = JSON.parse(window.localStorage.getItem(key || 'acc-crm-en-attente') || '[]'); return Array.isArray(v) ? v : []; } catch (_) { return []; } }",
+      "  _crmStore(q, key) { try { window.localStorage.setItem(key || 'acc-crm-en-attente', JSON.stringify(q)); return true; } catch (_) { return false; } }",
+      "  _crmQueue(d) { const q = this._crmLoad(); q.push({ d: d, t: Date.now() }); return this._crmStore(q); }",
+      "  async _crmFlush() {",
+      "    if (this._crmFlushing || !this._crmLoad().length) return;",
+      "    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;",
+      "    this._crmFlushing = true;",
+      "    let sent = 0;",
+      "    try {",
+      "      for (;;) {",
+      "        const q = this._crmLoad();",
+      "        if (!q.length) break;",
+      "        const item = q[0];",
+      "        const res = await this._crmSend(item.d);",
+      "        if (res.kind === 'network') break;",
+      "        const rest = this._crmLoad().filter((x) => x.t !== item.t);",
+      "        if (!this._crmStore(rest)) break;",
+      "        if (res.kind === 'ok') sent += 1;",
+      "        else { const k = this._crmLoad('acc-crm-non-confirmees'); k.push({ d: item.d, t: item.t, res: res }); this._crmStore(k, 'acc-crm-non-confirmees'); console.warn('[CRM ACC] fiche en attente non confirmée par Make', res); }",
+      "      }",
+      "    } finally { this._crmFlushing = false; }",
+      "    if (sent) this.setState({ flash: sent > 1 ? sent + ' fiches en attente envoyées au CRM ✓' : 'Fiche en attente envoyée au CRM ✓' });",
+      "  }",
+      ""
+    ].join('\n');
+
+    const didMount = [
+      "  componentDidMount() {",
+      "    this._crmOnline = () => this._crmFlush();",
+      "    window.addEventListener('online', this._crmOnline);",
+      "    this._crmTimer = setInterval(() => this._crmFlush(), 60000);",
+      "    setTimeout(() => this._crmFlush(), 3000);",
+      "    const presentationStage = this._deck();"
+    ].join('\n');
+
+    const willUnmount = [
+      "  componentWillUnmount() {",
+      "    window.removeEventListener('online', this._crmOnline);",
+      "    clearInterval(this._crmTimer);",
+      ""
+    ].join('\n');
+
+    const crmSave = [
+      "        this._sending = true;",
+      "        if (this._crm()) {",
+      "          this.setState({ flash: 'Enregistrement dans le CRM…' });",
+      "          try {",
+      "            const d = this._crmPayload(f);",
+      "            const res = await this._crmSend(d);",
+      "            if (res.kind === 'ok') this.setState({ f: {}, flash: res.action === 'creation' ? 'Nouvelle fiche créée dans le CRM ✓' : 'Fiche enregistrée dans le CRM ✓', savedOnce: true });",
+      "            else if (res.kind === 'refused') this.setState({ flash: res.error === 'fiche_introuvable' ? 'Fiche introuvable pour ce commercial : rouvrez la présentation depuis Airtable' : 'Enregistrement refusé (' + res.error + ') : prévenez l’administratrice' });",
+      "            else if (res.kind === 'unknown') this.setState({ flash: 'Enregistrement non confirmé : réessayez dans un instant' });",
+      "            else if (this._crmQueue(d)) this.setState({ f: {}, flash: 'Pas de réseau : la fiche sera envoyée automatiquement', savedOnce: true });",
+      "            else this.setState({ flash: 'Pas de réseau et fiche impossible à garder : réessayez plus tard' });",
+      "          } finally {",
+      "            this._sending = false;",
+      "          }",
+      "          return;",
+      "        }",
+      "        this.setState({ flash: 'Enregistrement dans Google Sheets…' });"
+    ].join('\n');
+
+    const edits = [
+      ["  async _submit(row) {", methods + "  async _submit(row) {"],
+      ["  componentDidMount() {\n    const presentationStage = this._deck();", didMount],
+      ["  componentWillUnmount() {\n", willUnmount],
+      ["        this._sending = true;\n        this.setState({ flash: 'Enregistrement dans Google Sheets…' });", crmSave],
+      ["Affichée seulement si la fiche rendez-vous n'a pas été remplie. ", ""]
+    ];
+    let next = source;
+    for (const [from, to] of edits) {
+      if (next.split(from).length !== 2) { console.warn('[CRM ACC] patch non appliqué : code de la présentation inattendu'); return; }
+      next = next.replace(from, () => to);
+    }
+    template.textContent = JSON.stringify(next);
+  })();
+  </script>
 </body>
 </html>
