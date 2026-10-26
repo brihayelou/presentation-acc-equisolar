@@ -525,7 +525,8 @@ document.addEventListener('DOMContentLoaded', async function() {
      Ouverte depuis une fiche Airtable (?prospect=rec…&commercial=rec…), la fiche rendez-vous
      est envoyée au webhook Make « ACC – 2 – Fiche enregistrée » au lieu du Google Sheets.
      « Enregistré » ne s'affiche que si Make répond ok:true. Sans réseau, la fiche est gardée
-     sur l'appareil et renvoyée automatiquement. Sans paramètres, comportement d'origine. */
+     sur l'appareil et renvoyée automatiquement. Avec ?prospect, la fiche est préremplie à
+     l'ouverture par le webhook « ACC – 3 – Fiche préremplie ». Sans paramètres, comportement d'origine. */
   (() => {
     const template = document.querySelector('script[type="__bundler/template"]');
     if (!template) return;
@@ -596,6 +597,29 @@ document.addEventListener('DOMContentLoaded', async function() {
       "    } finally { this._crmFlushing = false; }",
       "    if (sent) this.setState({ flash: sent > 1 ? sent + ' fiches en attente envoyées au CRM ✓' : 'Fiche en attente envoyée au CRM ✓' });",
       "  }",
+      "  async _crmPrefill() {",
+      "    const c = this._crm();",
+      "    if (!c || !c.prospect) return;",
+      "    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;",
+      "    const timer = ctrl ? setTimeout(() => ctrl.abort(), 15000) : null;",
+      "    let j = null;",
+      "    try {",
+      "      const r = await fetch('https://hook.eu1.make.com/yil8kdt0fji3qkrxmdam0i2fvdyfpryh', { method: 'POST', body: new URLSearchParams({ secret: 'acc_-gSkHBAQQlWc5YQW6SVW5brr', prospect: c.prospect, commercial: c.commercial }), signal: ctrl ? ctrl.signal : undefined });",
+      "      j = await r.json();",
+      "    } catch (_) { return; } finally { if (timer) clearTimeout(timer); }",
+      "    if (!j || j.ok !== true) { if (j && j.erreur === 'fiche_introuvable') this.setState({ flash: 'Fiche introuvable pour ce commercial : rouvrez la présentation depuis Airtable' }); return; }",
+      "    this._crmInfo = { commercial: j.commercial || '', reservation: j.reservation || '' };",
+      "    const txt = (v) => (v === null || v === undefined) ? '' : String(v).trim();",
+      "    const data = { entreprise: txt(j.entreprise), contact: txt(j.contact), mail: txt(j.mail), tel: txt(j.tel), rue: txt(j.rue), cp: txt(j.cp), ville: txt(j.ville), activite: txt(j.activite), consoKwh: txt(j.consoKwh) };",
+      "    if (txt(j.tarifMwh)) { data.tarif = txt(j.tarifMwh).replace('.', ','); data.tarifUnite = 'mwh'; }",
+      "    if (['Journée', 'Jour + soir', '24 h / 24'].includes(j.horaires)) data.horaires = j.horaires;",
+      "    const cur = this.state.f || {};",
+      "    const merged = { ...cur };",
+      "    let n = 0;",
+      "    Object.keys(data).forEach((k) => { if (data[k] && !String(cur[k] || '').trim()) { merged[k] = data[k]; n += 1; } });",
+      "    if (data.tarif && !String(cur.tarif || '').trim()) merged.tarifUnite = 'mwh';",
+      "    if (n) this.setState({ f: merged, flash: 'Fiche préremplie depuis le CRM' });",
+      "  }",
       ""
     ].join('\n');
 
@@ -605,6 +629,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       "    window.addEventListener('online', this._crmOnline);",
       "    this._crmTimer = setInterval(() => this._crmFlush(), 60000);",
       "    setTimeout(() => this._crmFlush(), 3000);",
+      "    this._crmPrefill();",
       "    const presentationStage = this._deck();"
     ].join('\n');
 
