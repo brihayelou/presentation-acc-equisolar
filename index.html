@@ -577,7 +577,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       "    finally { if (timer) clearTimeout(timer); }",
       "    let j = null;",
       "    try { j = await r.json(); } catch (_) {}",
-      "    if (j && j.ok === true) return { kind: 'ok', action: j.action };",
+      "    if (j && j.ok === true) return { kind: 'ok', action: j.action, id: j.id };",
       "    if (r.status === 403 || r.status === 404 || (j && j.ok === false)) return { kind: 'refused', error: (j && j.erreur) || String(r.status) };",
       "    if (r.status >= 500 || r.status === 429 || r.status === 408) return { kind: 'network' };",
       "    return { kind: 'unknown' };",
@@ -617,6 +617,46 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       "    out.finBtnUrl = resa; out.finBtnLabel = 'Réserver votre rendez-vous d’analyse ↗';",
       "    if (this._crmQrCache.src) { out.finQrDyn = this._crmQrCache.src; out.finQr1 = 'Scannez pour prendre'; out.finQr2 = 'rendez-vous'; }",
       "    return out;",
+      "  }",
+      "  _crmPdfVierge() {",
+      "    try {",
+      "      const raw = atob(window.ACC_ENEDIS_PDF_B64 || '');",
+      "      const bytes = new Uint8Array(raw.length);",
+      "      for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);",
+      "      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));",
+      "      const link = document.createElement('a');",
+      "      link.href = url; link.target = '_blank'; link.rel = 'noopener'; link.download = 'Accord-communication-donnees-Enedis.pdf';",
+      "      document.body.appendChild(link); link.click(); link.remove();",
+      "      setTimeout(() => URL.revokeObjectURL(url), 60000);",
+      "    } catch (_) {}",
+      "  }",
+      "  async _crmSignAccord() {",
+      "    const c = this._crm();",
+      "    if (!c || !c.prospect) { this._crmPdfVierge(); return; }",
+      "    if (this._crmSigning) return;",
+      "    this._crmSigning = true;",
+      "    let win = null;",
+      "    try { win = window.open('', '_blank'); if (win) win.document.write('<!doctype html><meta charset=\"utf-8\"><title>Accord Enogrid</title><body style=\"font-family:Rubik,Arial,sans-serif;background:#1d1d1b;color:#fff;display:grid;place-items:center;height:100vh;margin:0;font-size:24px\">Préparation de l’accord à signer…</body>'); } catch (_) {}",
+      "    const close = () => { try { if (win) win.close(); } catch (_) {} };",
+      "    this.setState({ flash: 'Préparation de l’accord à signer…' });",
+      "    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;",
+      "    const timer = ctrl ? setTimeout(() => ctrl.abort(), 90000) : null;",
+      "    let r = null, j = null;",
+      "    try {",
+      "      r = await fetch('https://hook.eu1.make.com/2x8jqj5cwge7hoini36qg2t3crloxa3m', { method: 'POST', body: new URLSearchParams({ secret: 'acc_-gSkHBAQQlWc5YQW6SVW5brr', prospect: c.prospect, commercial: c.commercial, mode: 'tablette' }), signal: ctrl ? ctrl.signal : undefined });",
+      "      try { j = await r.json(); } catch (_) {}",
+      "    } catch (_) { r = null; } finally { if (timer) clearTimeout(timer); this._crmSigning = false; }",
+      "    const lien = j && j.ok === true && /^https:\\/\\/[^\\s\"'<>]+$/.test(j.lien || '') ? j.lien : '';",
+      "    if (lien) {",
+      "      if (win && !win.closed) { try { win.location.href = lien; } catch (_) { window.open(lien, '_blank'); } } else window.open(lien, '_blank');",
+      "      this.setState({ flash: 'Accord prêt : signature dans le nouvel onglet' });",
+      "      return;",
+      "    }",
+      "    close();",
+      "    if (!r) this.setState({ flash: 'Pas de réseau : impossible de préparer la signature pour l’instant' });",
+      "    else if (j && j.erreur === 'fiche_incomplete') this.setState({ flash: 'Enregistrez d’abord la fiche (contact et e-mail), puis réessayez' });",
+      "    else if (j && j.erreur === 'fiche_introuvable') this.setState({ flash: 'Fiche introuvable pour ce commercial : rouvrez la présentation depuis Airtable' });",
+      "    else this.setState({ flash: 'Accord indisponible pour le moment : réessayez dans un instant' });",
       "  }",
       "  _crmApplyQr() {",
       "    const img = document.querySelector('section[data-label=\"Et maintenant\"] img[data-crm-qr]') || document.querySelector('section[data-label=\"Et maintenant\"] img[alt=\"QR code vers la présentation prospect\"]');",
@@ -690,6 +730,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       "          try {",
       "            const d = this._crmPayload(f);",
       "            const res = await this._crmSend(d);",
+      "            if (res.kind === 'ok' && res.action === 'creation' && /^rec[A-Za-z0-9]{14}$/.test(res.id || '') && this._crmParams) this._crmParams = { ...this._crmParams, prospect: res.id };",
       "            if (res.kind === 'ok') this.setState({ f: {}, flash: res.action === 'creation' ? 'Nouvelle fiche créée dans le CRM ✓' : 'Fiche enregistrée dans le CRM ✓', savedOnce: true });",
       "            else if (res.kind === 'refused') this.setState({ flash: res.error === 'fiche_introuvable' ? 'Fiche introuvable pour ce commercial : rouvrez la présentation depuis Airtable' : 'Enregistrement refusé (' + res.error + ') : prévenez l’administratrice' });",
       "            else if (res.kind === 'unknown') this.setState({ flash: 'Enregistrement non confirmé : réessayez dans un instant' });",
@@ -727,6 +768,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       next = next.replace(valsAnchor, () => valsAnchor + "      ...this._crmFin(),\n");
     } else {
       console.warn('[CRM ACC] dernière slide laissée telle quelle : repères introuvables');
+    }
+    /* Bouton « Signer l'accord Enogrid » (scénario 5). Partie facultative. */
+    const accBtnClick = 'sc-camel-on-click="{{ openEnedisDoc }}"';
+    const accBtnLabel = '<span>Consulter l’accord Enogrid</span>';
+    const valsAnchor2 = "      skipFin: this._filled ? '' : undefined,\n";
+    if (next.split(accBtnClick).length === 2 && next.split(accBtnLabel).length === 2 && next.split(valsAnchor2).length === 2) {
+      next = next.replace(accBtnClick, () => 'sc-camel-on-click="{{ crmAccord }}"');
+      next = next.replace(accBtnLabel, () => '<span>{{ accordLabel }}</span>');
+      next = next.replace(valsAnchor2, () => valsAnchor2 + "      accordLabel: (this._crm() && this._crm().prospect) ? 'Signer l’accord Enogrid' : 'Consulter l’accord Enogrid',\n      crmAccord: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this._crmSignAccord(); },\n");
+    } else {
+      console.warn('[CRM ACC] bouton de l’accord laissé tel quel : repères introuvables');
     }
     template.textContent = JSON.stringify(next);
   })();
