@@ -625,6 +625,10 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   .acc-btn.acc-ghost{background:transparent;color:#f7a600}
   .acc-btn[disabled]{opacity:.5;cursor:wait}
   .acc-msg{font-size:16px;color:#ff8f85;min-height:1em}
+  .acc-sig{background:#2a2a28;border:1px solid #444441;border-radius:14px;padding:14px 18px;margin:4px 0 14px;font-size:17px;line-height:1.7;color:#e8e8e4}
+  .acc-sig-t{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#f7a600;margin-bottom:2px}
+  .acc-sig b{color:#fff}
+  .acc-btn.acc-small{font-size:15px;padding:6px 14px;margin-left:8px;vertical-align:middle}
   .acc-steps{margin:8px 0 0;padding-left:22px;font-size:17px;line-height:1.55;color:#e8e8e4}
   .acc-steps li{margin-bottom:8px}
   .acc-steps b{color:#fff}
@@ -675,12 +679,14 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 120000);
   }
-  function stepsHtml(name) {
+  function stepsHtml(name, d) {
+    const who = [d.prenom, d.nom].filter(Boolean).join(' ');
     return `<div class="acc-kick">Equisolar · Accord Enogrid</div><h2>Accord prérempli prêt</h2>
       <p class="acc-sub">Le fichier <b style="color:#fff">${esc(name)}</b> vient d’être téléchargé sur la tablette (dossier Téléchargements).</p>
+      <div class="acc-sig"><div class="acc-sig-t">Signataire à indiquer dans Yousign</div><div>Prénom et nom : <b>${esc(who) || '—'}</b></div><div class="acc-sig-m">E-mail : <b>${esc(d.mail) || '—'}</b>${d.mail ? ' <button class="acc-btn acc-ghost acc-small" data-acc="copymail">Copier l’e-mail</button>' : ''}</div></div>
       <ol class="acc-steps">
-        <li>Ouvrez <b>Yousign</b>, puis <b>Nouvelle signature</b>, et importez ce fichier.</li>
-        <li>Ajoutez le signataire (nom, prénom, e-mail) et placez sa <b>signature en page 2</b>, dans la case « Signature du Client ».</li>
+        <li>Ouvrez <b>Yousign</b>, puis <b>Nouvelle invitation</b>, et importez ce fichier.</li>
+        <li>Ajoutez le signataire : tapez son prénom et son nom, et <b>collez son e-mail</b> (bouton « Copier l’e-mail » ci-dessus). Placez sa <b>signature en page 2</b>, dans la case « Signature du Client ».</li>
         <li>Faites signer <b>sur la tablette</b>, ou envoyez la demande <b>par e-mail</b>.</li>
         <li>Une fois l’accord signé : téléchargez le PDF signé depuis Yousign et déposez-le dans la fiche Airtable, champ <b>« Accord Enogrid signé »</b>. Le statut passe tout seul à « Accord Enogrid signé ».</li>
       </ol>
@@ -742,6 +748,15 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
       if (act === 'close') { close(); return; }
       if (act === 'blank') { download(pdfBytes(), 'Accord Enogrid (vierge).pdf'); return; }
       if (act === 'again') { if (lastBytes) download(lastBytes, lastName); return; }
+      if (act === 'copymail') {
+        const txt = d.mail || '';
+        let ok = false;
+        try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(txt); ok = true; } } catch (_) {}
+        if (!ok) { try { const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0'; ov.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); ok = document.execCommand('copy'); ta.remove(); } catch (_) {} }
+        t.textContent = ok ? 'E-mail copié ✓' : 'Copie impossible : sélectionnez l’e-mail';
+        setTimeout(() => { if (t.isConnected) t.textContent = 'Copier l’e-mail'; }, 2500);
+        return;
+      }
       if (act !== 'make') return;
       read();
       let missing = 0;
@@ -757,7 +772,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
         lastBytes = await window.AccFillAccord(window.PDFLib, pdfBytes(), { ...d, date: today(), faitA: d.faitA || d.ville });
         lastName = 'Accord Enogrid - ' + safeName(d.denomination) + '.pdf';
         download(lastBytes, lastName);
-        ov.querySelector('.acc-box').innerHTML = stepsHtml(lastName);
+        ov.querySelector('.acc-box').innerHTML = stepsHtml(lastName, d);
       } catch (err) {
         console.warn('[CRM ACC] accord non généré', err);
         t.disabled = false; t.textContent = 'Créer l’accord prérempli (PDF)';
