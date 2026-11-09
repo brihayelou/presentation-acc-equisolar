@@ -628,6 +628,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   .acc-sig{background:#2a2a28;border:1px solid #444441;border-radius:14px;padding:14px 18px;margin:4px 0 14px;font-size:17px;line-height:1.7;color:#e8e8e4}
   .acc-sig-t{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#f7a600;margin-bottom:2px}
   .acc-sig b{color:#fff}
+  .acc-note{font-size:14px;color:#a5a5a0;line-height:1.45;margin-top:4px}
   .acc-btn.acc-small{font-size:15px;padding:6px 14px;margin-left:8px;vertical-align:middle}
   .acc-steps{margin:8px 0 0;padding-left:22px;font-size:17px;line-height:1.55;color:#e8e8e4}
   .acc-steps li{margin-bottom:8px}
@@ -658,7 +659,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   const TYPES = ['Entreprise', 'Collectivité locale', 'EPCI', 'Association'];
   const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const today = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear(); };
-  const safeName = (v) => String(v || 'prospect').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'prospect';
+  const safeName = (v) => String(v || 'prospect').replace(/[\u2013\u2014]/g, '-').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'prospect';
 
   let ov = null, keyGuard = null;
   function close() {
@@ -679,11 +680,33 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 120000);
   }
+  function e164(t) {
+    let v = String(t || '').replace(/[^\d+]/g, '');
+    if (!v) return '';
+    if (v.startsWith('00')) v = '+' + v.slice(2);
+    if (v.startsWith('0')) v = '+33' + v.slice(1);
+    return v.startsWith('+') ? v : '+' + v;
+  }
+  function contactCsv(d) {
+    const cell = (v) => { const t = String(v == null ? '' : v).replace(/[\r\n]+/g, ' ').trim(); return /[;"]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const head = ['Prénom', 'Nom', 'Adresse e-mail', 'Numéro de téléphone', 'Société', 'Titre du poste'];
+    const row = [d.prenom, d.nom, d.mail, e164(d.tel), d.denomination, ''];
+    return '\ufeff' + head.join(';') + '\r\n' + row.map(cell).join(';') + '\r\n';
+  }
+  function downloadCsv(d) {
+    const name = 'Contact Yousign - ' + safeName(d.denomination) + '.csv';
+    const url = URL.createObjectURL(new Blob([contactCsv(d)], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    return name;
+  }
   function stepsHtml(name, d) {
     const who = [d.prenom, d.nom].filter(Boolean).join(' ');
     return `<div class="acc-kick">Equisolar · Accord Enogrid</div><h2>Accord prérempli prêt</h2>
       <p class="acc-sub">Le fichier <b style="color:#fff">${esc(name)}</b> vient d’être téléchargé sur la tablette (dossier Téléchargements).</p>
-      <div class="acc-sig"><div class="acc-sig-t">Signataire à indiquer dans Yousign</div><div>Prénom et nom : <b>${esc(who) || '—'}</b></div><div class="acc-sig-m">E-mail : <b>${esc(d.mail) || '—'}</b>${d.mail ? ' <button class="acc-btn acc-ghost acc-small" data-acc="copymail">Copier l’e-mail</button>' : ''}</div></div>
+      <div class="acc-sig"><div class="acc-sig-t">Signataire à indiquer dans Yousign</div><div>Prénom et nom : <b>${esc(who) || '—'}</b></div><div class="acc-sig-m">E-mail : <b>${esc(d.mail) || '—'}</b>${d.mail ? ' <button class="acc-btn acc-ghost acc-small" data-acc="copymail">Copier l’e-mail</button>' : ''}</div>${(d.prenom && d.nom && d.mail) ? '<div class="acc-sig-m">Contact Yousign (CSV) : téléchargé avec l’accord <button class="acc-btn acc-ghost acc-small" data-acc="csv">Télécharger le CSV à nouveau</button></div><div class="acc-note">À importer dans Yousign : Paramètres › Contacts › Importer depuis CSV. Yousign ne gère pas les doublons : n’importez le contact qu’une fois.</div>' : '<div class="acc-note">Pas de CSV contact : il faut le prénom, le nom et l’e-mail du signataire.</div>'}</div>
       <ol class="acc-steps">
         <li>Ouvrez <b>Yousign</b>, puis <b>Nouvelle invitation</b>, et importez ce fichier.</li>
         <li>Ajoutez le signataire : tapez son prénom et son nom, et <b>collez son e-mail</b> (bouton « Copier l’e-mail » ci-dessus). Placez sa <b>signature en page 2</b>, dans la case « Signature du Client ».</li>
@@ -748,6 +771,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
       if (act === 'close') { close(); return; }
       if (act === 'blank') { download(pdfBytes(), 'Accord Enogrid (vierge).pdf'); return; }
       if (act === 'again') { if (lastBytes) download(lastBytes, lastName); return; }
+      if (act === 'csv') { downloadCsv(d); t.textContent = 'CSV téléchargé ✓'; return; }
       if (act === 'copymail') {
         const txt = d.mail || '';
         let ok = false;
@@ -772,6 +796,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
         lastBytes = await window.AccFillAccord(window.PDFLib, pdfBytes(), { ...d, date: today(), faitA: d.faitA || d.ville });
         lastName = 'Accord Enogrid - ' + safeName(d.denomination) + '.pdf';
         download(lastBytes, lastName);
+        if (d.prenom && d.nom && d.mail) setTimeout(() => { try { downloadCsv(d); } catch (_) {} }, 600);
         ov.querySelector('.acc-box').innerHTML = stepsHtml(lastName, d);
       } catch (err) {
         console.warn('[CRM ACC] accord non généré', err);
