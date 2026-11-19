@@ -1067,5 +1067,228 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
     template.textContent = JSON.stringify(next);
   })();
   </script>
+<script id="site-alignment-20261117">
+(() => {
+  'use strict';
+  const node=document.querySelector('script[type="__bundler/template"]');
+  if(!node)return;
+  let source=JSON.parse(node.textContent);
+  const INVOICE="<div style=\"display:flex;flex-direction:column;justify-content:center;min-width:0\" data-a=\"up\" data-d=\"3\"><div role=\"img\" aria-label=\"Schéma : la facture aujourd'hui et avec l'autoconsommation collective\">\n<div style=\"display: flex; gap: 32px; align-items: flex-start\">\n<div style=\"flex: 1; display: flex; flex-direction: column\"><div style=\"height: 153.9px; margin-top: 0px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 22.400000000000002px\">Fourniture (kWh)<br>par votre fournisseur</div><div style=\"height: 101.25px; margin-top: 36.45px; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 22.400000000000002px\">Frais d'utilisation<br>du réseau</div><div style=\"height: 218.70000000000002px; margin-top: 24.3px; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 22.400000000000002px\">Taxes<br>(TVA, accise)</div></div>\n<div style=\"flex: 1; display: flex; flex-direction: column\"><div style=\"height: 85.05000000000001px; margin-top: 0px; border: 1px dashed #F7A600; color: #F7A600; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 25.6px\">Économie</div><div style=\"height: 24.3px; margin-top: 16.200000000000003px; border: 1px solid #bdbdbd; color: #e0e0e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 16px\">Frais de gestion fournisseur*</div><div style=\"height: 56.7px; margin-top: 8.100000000000001px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 19.200000000000003px\">Complément (kWh) par votre fournisseur</div><div style=\"height: 76.95px; margin-top: 8.100000000000001px; background: #F7A600; color: #000000; font-weight: 500; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 20.8px\">Électricité solaire (kWh)<br>par Equisolar</div><div style=\"height: 74.25px; margin-top: 18.900000000000002px; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 20.8px\">Frais d'utilisation<br>du réseau</div><div style=\"height: 141.75px; margin-top: 24.3px; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px; box-sizing: border-box; line-height: 1.25; font-size: 22.400000000000002px\">Taxes ↓</div></div>\n</div>\n<div style=\"display: flex; gap: 32px; margin-top: 18.900000000000002px\">\n<p style=\"flex: 1; margin: 0; text-align: center; font-size: 24px\">Aujourd'hui</p>\n<p style=\"flex: 1; margin: 0; text-align: center; font-size: 24px; color: #F7A600\">Avec l'autoconsommation collective</p>\n</div>\n</div>\n<p style=\"margin: 20px 0 0; font-size: 20.8px; color: #bdbdbd\">* Des frais de gestion peuvent vous être facturés par votre fournisseur principal.</p></div>";
+  const EXAMPLES={"Projet 1":"<div role=\"img\" aria-label=\"Sur 30 ans : sans autoconsommation collective, facture fournisseur de 20 255 203,57 € et accise de 6 840 127,03 € ; avec, économie globale de 2 915 281,11 €, plus-value TURPE de 135 706,77 €, facture fournisseur de 13 422 157,44 €, autoconsommation de 6 089 559,31 € et accise de 4 532 625,98 €\"><p style=\"margin: 0 0 12px; font-size: 22px; color: #bdbdbd\">Factures cumulées sur 30 ans</p><div style=\"display: flex; gap: 24px; align-items: flex-start\"><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 430.2px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Facture fournisseur<br>sans ACC<br>20 255 203,57 €</div><div style=\"height: 145.8px; border-top: 3px solid #000000; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Accise<br>6 840 127,03 €</div></div><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 59.4px; border: 1px dashed #F7A600; color: #F7A600; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Économie globale<br>2 915 281,11 €</div><div style=\"height: 30.6px; border-top: 3px solid #000000; background: #bdbdbd; color: #1d1d1b; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 13px\">Plus-value TURPE<br>135 706,77 €</div><div style=\"height: 270.90000000000003px; border-top: 3px solid #000000; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Facture fournisseur<br>avec ACC<br>13 422 157,44 €</div><div style=\"height: 123.3px; border-top: 3px solid #000000; background: #F7A600; color: #1d1d1b; font-weight: 500; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Autoconsommation<br>6 089 559,31 €</div><div style=\"height: 91.8px; border-top: 3px solid #000000; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Accise<br>4 532 625,98 €</div></div></div><div style=\"display: flex; gap: 24px; margin-top: 10px; font-size: 20px\"><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #bdbdbd\">Sans autoconsommation collective</p><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #F7A600\">Avec autoconsommation collective</p></div></div>","Projet 2":"<div role=\"img\" aria-label=\"Première année : sans autoconsommation collective, 108 884,86 € d'électricité du fournisseur et 20 058,15 € d'accise ; avec, 30 549,71 € d'économie, 32 223,10 € de complément, 60 234,24 € d'électricité couverte par l'installation et 5 935,96 € d'accise\"><p style=\"margin: 0 0 12px; font-size: 22px; color: #bdbdbd\">Électricité et accise, la première année</p><div style=\"display: flex; gap: 24px; align-items: flex-start\"><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 486px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Électricité<br>du fournisseur<br>108 884,86 €</div><div style=\"height: 90px; border-top: 3px solid #000000; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Accise<br>20 058,15 €</div></div><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 135.9px; border: 1px dashed #F7A600; color: #F7A600; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Économie<br>30 549,71 €</div><div style=\"height: 142.20000000000002px; border-top: 3px solid #000000; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Complément couvert<br>par le réseau<br>32 223,10 €</div><div style=\"height: 267.3px; border-top: 3px solid #000000; background: #F7A600; color: #1d1d1b; font-weight: 500; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Couvert par<br>l'installation<br>60 234,24 €</div><div style=\"height: 30.6px; border-top: 3px solid #000000; background: #2e2e2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 13px\">Accise 5 935,96 €</div></div></div><div style=\"display: flex; gap: 24px; margin-top: 10px; font-size: 20px\"><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #bdbdbd\">Sans autoconsommation collective</p><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #F7A600\">Avec autoconsommation collective</p></div></div>","Projet 3":"<div role=\"img\" aria-label=\"Sans autoconsommation collective : 5 239 MWh par an. Avec : 2 609 MWh par an de production solaire et 2 630 MWh par an de complément fourni par le réseau\"><p style=\"margin: 0 0 12px; font-size: 22px; color: #bdbdbd\">Électricité consommée par an</p><div style=\"display: flex; gap: 24px; align-items: flex-start\"><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 576px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Consommation<br>5 239 MWh/an</div></div><div style=\"flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column\"><div style=\"height: 288.90000000000003px; background: #3a3a3a; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Complément fourni<br>par le réseau<br>2 630 MWh/an</div><div style=\"height: 287.1px; border-top: 3px solid #000000; background: #F7A600; color: #1d1d1b; font-weight: 500; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 8px; box-sizing: border-box; line-height: 1.2; font-size: 20px\">Production solaire<br>2 609 MWh/an<br>49,80 % des besoins</div></div></div><div style=\"display: flex; gap: 24px; margin-top: 10px; font-size: 20px\"><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #bdbdbd\">Sans autoconsommation collective</p><p style=\"flex: 1 1 0; min-width: 0; margin: 0; text-align: center; color: #F7A600\">Avec autoconsommation collective</p></div></div>"};
+  const replace=(html,oldText,newText)=>{
+    if(!html.includes(oldText))throw new Error('Repère absent : '+oldText);
+    return html.split(oldText).join(newText);
+  };
+  const section=(name,edit)=>{
+    const expression=new RegExp('<section\\b[^>]*data-label="'+name+'"[\\s\\S]*?<\\/section>');
+    const match=source.match(expression);
+    if(!match)throw new Error('Diapositive absente : '+name);
+    source=source.replace(expression,()=>edit(match[0]));
+  };
+  section('Titre',html=>{
+    html=replace(html,'à prix fixe','à tarif maîtrisé');
+    return replace(html,'Pour tous les professionnels (industrie, agriculture et tertiaire) et toutes les collectivités','Pour tous les professionnels, privés (industrie, agriculture, tertiaire, commerces) comme publics (mairies et autres collectivités)');
+  });
+  section('Carte',html=>replace(html,'À moins de 20 km','À proximité'));
+  section('Le principe',html=>{
+    for(const [before,after] of [
+      ['Le soleil du voisin, dans votre compteur.','Une énergie locale, à tarif maîtrisé.'],
+      ['Une centrale solaire produit</div>',"Une centrale solaire produit l’électricité</div>"],
+      ['Sur un toit, un parking ou un terrain à moins de 2 km.',"Elle est installée sur un toit, un parking ou un terrain proche de votre site."],
+      ['Le réseau Enedis la répartit','Nous la répartissons entre les participants'],
+      ['Entre tous les participants, selon des règles fixées ensemble.',"En collaboration avec Enedis et votre fournisseur, nous répartissons l'électricité produite entre les participants. Si vous consommez lorsque nous produisons, vous bénéficiez d'une énergie à prix réduit."],
+      ['Vous la consommez à prix fixe',"Vous consommez comme d'habitude"],
+      ['Votre fournisseur habituel complète le reste.',"Vous ne changez rien à votre consommation, mais vous réalisez des économies sur votre facture d'électricité. Et plus vous consommez pendant nos heures de production, plus vous économisez."]
+    ])html=replace(html,before,after);
+    return html.replaceAll('gap: 80px;','gap: 40px;').replaceAll('padding: 56px;','padding: 32px;').replaceAll('gap: 32px;','gap: 20px;').replaceAll('font-size: 48px;','font-size: 40px;').replaceAll('font-size: 32px;','font-size: 28px;').replaceAll('width: 150px; height: 150px;','width: 100px; height: 100px;');
+  });
+  section('Vos bénéfices',html=>{
+    for(const [before,after] of [
+      ['Un kWh solaire moins cher que le marché.',"Le kWh solaire vous est vendu en dessous des prix de vos fournisseurs d'énergie."],
+      ['Un prix fixé d’avance','Un tarif maîtrisé'],
+      ['Vos dépenses sécurisées sur 20 à 30 ans.',"Il est fixé pour toute la durée de notre engagement et indexé de 1 % par an : vos dépenses d'énergie deviennent prévisibles."],
+      ['Equisolar s’occupe de tout, clé en main.',"Equisolar s'occupe de tout, de la création de l'opération au suivi avec Enedis."],
+      ['Un geste concret pour la transition, visible par vos clients.',"Vous faites un geste concret pour la transition, visible par vos clients. Des garanties d'origine, des certificats officiels, attestent que votre électricité vient d'une source renouvelable."]
+    ])html=replace(html,before,after);
+    return html.replaceAll('gap: 72px;','gap: 40px;').replaceAll('padding: 48px 56px;','padding: 32px;').replaceAll('gap: 48px;','gap: 24px;').replaceAll('width: 140px; height: 140px;','width: 96px; height: 96px;').replaceAll('font-size: 32px;','font-size: 28px;').replaceAll('font-size: 46px;','font-size: 40px;');
+  });
+  section('Votre facture',html=>{
+    html=replace(html,'Un prix du kWh solaire <span style="font-weight: 500;">fixe* et plus bas</span>','Un <span style="font-weight: 500;">tarif maîtrisé* et plus bas</span>');
+    html=replace(html,'Le réseau (TURPE) reste dû. Votre fournisseur facture le complément.','Votre fournisseur facture le complément.');
+    html=replace(html,'Remplacé par un prix ACC fixe et plus bas','Remplacé par un tarif maîtrisé et plus bas');
+    const begin=html.indexOf('  <div style="display: flex; gap: 80px; align-items: flex-end;');
+    const end=html.indexOf('<sc-if value="{{ facOpen }}"');
+    if(begin<0||end<begin)throw Error('Schéma facture introuvable');
+    html=html.slice(0,begin)+INVOICE+html.slice(end);
+    return html;
+  });
+  section('Les démarches',html=>{
+    for(const [before,after] of [
+      ['La structure qui réunit producteurs et consommateurs. Elle porte l’opération et représente ses membres.',"La personne morale organisatrice réunit producteurs et consommateurs. Elle porte l'opération et représente ses membres auprès d'Enedis."],
+      ['Signer avec Enedis','Créer la boucle'],
+      ['Enedis mesure production et consommation, puis affecte l’énergie locale à chaque point de livraison.',"La boucle d'autoconsommation collective (BACC) réunit la centrale et les sites qui consomment son électricité, dans le périmètre autorisé."],
+      ['Fixer la répartition',"Enedis encadre l'opération"],
+      ['Statiques, dynamiques ou au prorata des consommations : elles fixent la part de chacun.',"Une convention avec Enedis fixe le cadre. Nous collaborons avec Enedis et votre fournisseur pour mesurer la production et la consommation, puis affecter l'énergie locale à chaque point de livraison."]
+    ])html=replace(html,before,after);
+    const anchor='  <sc-if value="{{ pmoOpen }}"';
+    html=replace(html,anchor,'<p style="margin:0;font-size:28px;line-height:1.4;color:#d6d6d2" data-a="up" data-d="4">De votre côté, vous signez votre contrat d\'achat d\'électricité solaire. Votre contrat avec votre fournisseur actuel ne change pas.</p>\n'+anchor);
+    return html.replaceAll('gap: 72px;','gap: 36px;').replaceAll('font-size: 34px; font-weight: 300; line-height: 1.4;','font-size: 29px; font-weight: 300; line-height: 1.35;').replaceAll('font-size: 110px;','font-size: 90px;');
+  });
+  section('Vos questions',html=>{
+    for(const [before,after] of [
+      ['Combien ça me coûte ?','Combien ça coûte ?'],
+      ['Aucun investissement : vous payez les kWh solaires consommés, à prix fixe.',"Vous n'investissez rien. Vous payez seulement les kWh solaires que vous consommez, à un tarif maîtrisé. Et vous économisez : ce prix est inférieur aux prix de vos fournisseurs d'énergie. Des frais de gestion peuvent vous être facturés par votre fournisseur principal."],
+      ['Je change de fournisseur ?','Dois-je changer de fournisseur ?'],
+      ['Non. Vous gardez votre contrat, il fournit le complément.',"Non. Vous gardez votre contrat actuel : votre fournisseur continue de vous livrer le complément. Nous travaillons de concert avec lui afin d'assurer la fourniture de votre énergie."],
+      ['Le réseau prend le relais automatiquement. Aucune coupure.',"Le réseau prend le relais automatiquement, sans aucune coupure. Vous consommez alors l'électricité de votre fournisseur habituel."],
+      ['Il faut installer du matériel ?','Faut-il installer du matériel ?'],
+      ['Non. Votre compteur Linky suffit, Enedis mesure à distance.',"Non. Votre compteur Linky suffit : Enedis mesure votre consommation à distance."],
+      ['Vous sortez de l’opération selon les règles de la PMO. Enedis retire votre compteur.',"Vous sortez de l'opération selon les règles prévues par la PMO, et Enedis retire votre compteur de la répartition."]
+    ])html=replace(html,before,after);
+    return html.replaceAll('gap: 72px;','gap: 40px;').replaceAll('gap: 64px 56px;','gap: 32px 48px;').replaceAll('font-size: 40px;','font-size: 34px;').replaceAll('font-size: 30px;','font-size: 26px;');
+  });
+  for(const [name,chart] of Object.entries(EXAMPLES))section(name,html=>{
+    const panel=html.indexOf('<sc-if value="{{ detOpen');
+    if(panel<0)throw Error('Panneau détaillé absent : '+name);
+    const head=html.slice(0,panel),details=html.slice(panel);
+    const hero=head.match(/<div style="font-size: 200px;[\s\S]*?<\/div>/)[0].replace('font-size: 200px;','font-size: 130px;');
+    const time=head.match(/<div style="font-size: 44px;">[\s\S]*?<\/div>/)[0].replace('font-size: 44px;','font-size: 34px;');
+    const statStart=head.indexOf('<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 56px 48px;">');
+    let statEnd=-1,depth=0;
+    for(const tag of head.slice(statStart).matchAll(/<\/?div\b[^>]*>/g)){
+      depth+=tag[0].startsWith('</')?-1:1;
+      if(depth===0){statEnd=statStart+tag.index+tag[0].length;break;}
+    }
+    if(statStart<0||statEnd<0)throw Error('Caractéristiques absentes : '+name);
+    const stats=head.slice(statStart,statEnd).replaceAll('gap: 56px 48px;','gap: 28px 24px;').replaceAll('font-size: 72px;','font-size: 44px;').replaceAll('font-size: 30px;','font-size: 24px;').replaceAll('padding-left: 32px;','padding-left: 20px;');
+    const headerStart=head.indexOf('  <div style="display: flex; flex-direction: column; gap: 24px;" data-a="up" data-d="0">');
+    const headerEnd=head.indexOf('\n  </div>',headerStart)+9;
+    let top=head.slice(0,headerEnd).replace('padding: 110px 120px;','padding: 80px 100px; display:flex; flex-direction:column; gap:28px;').replace('font-size: 80px;','font-size: 68px;');
+    const accise=name==='Projet 2'?"<p style=\"margin:0;font-size:25px;line-height:1.35\">Sur 20 ans, l'économie atteint environ 1 million d'euros : 730 000 € sur le prix de l'électricité et 280 000 € d'exonération de la taxe d'accise.</p>":'';
+    return top+'\n<div style="display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:72px;flex:1;min-height:0;align-items:center"><div style="display:flex;flex-direction:column;gap:26px" data-a="up" data-d="1">'+hero+time+stats+accise+'</div><div style="background:#1d1d1b;color:#ffffff;padding:24px;border-radius:20px;min-width:0" data-a="up" data-d="2">'+chart+'</div></div>\n'+details;
+  });
+  const publicText="Les démarches d'un acteur public sont plus complexes que celles d'une entreprise. Nous commençons donc par vous présenter les modalités à suivre, avant d'étudier votre projet.";
+  section('Votre site',html=>{
+    html=replace(html,'Parlons de votre entreprise.','Parlons de votre projet.');
+    html=replace(html,'>Entreprise *</span>','>Entreprise ou collectivité *</span>');
+    html=replace(html,'placeholder="Nom de l’entreprise"','placeholder="Entreprise ou collectivité"');
+    const anchor='    <button sc-camel-on-click="{{ crmAccord }}"';
+    html=replace(html,anchor,'<p style="margin:0;font-size:25px;line-height:1.35;color:#d6d6d2">'+publicText+'</p>\n'+anchor);
+    return html.replaceAll('font-size: 29px;','font-size: 26px;').replace('gap: 28px; min-height: 0;','gap: 22px; min-height: 0;');
+  });
+  section('Et maintenant',html=>{
+    html=replace(html,'On vous envoie une <span style="font-weight: 500;">estimation chiffrée</span>.','On étudie votre demande et on vous recontacte.');
+    return html;
+  });
+  // Garde-fou : aucun ancien vocabulaire tarifaire ne reste dans les slides ACC.
+  source=source.replaceAll('à prix fixe','à tarif maîtrisé').replaceAll('prix ACC fixe','tarif maîtrisé').replaceAll('20 à 30 ans','pour toute la durée de notre engagement');
+  node.textContent=JSON.stringify(source);
+})();
+</script>
+<script id="example-refinement-20261117">
+(() => {
+  'use strict';
+  const node=document.querySelector('script[type="__bundler/template"]');
+  if(!node)return;
+  let source=JSON.parse(node.textContent);
+  const edit=(name,fn)=>{
+    const re=new RegExp('<section\\b[^>]*data-label="'+name+'"[\\s\\S]*?<\\/section>');
+    if(!re.test(source))throw Error('Diapositive absente : '+name);
+    source=source.replace(re,html=>fn(html));
+  };
+  edit('Vos bénéfices',html=>html.replace('pour toute la durée de notre engagement','pour toute la durée de votre engagement').replace(", des certificats officiels,",''));
+  const comparisons={
+    'Projet 1':{period:'Factures cumulées sur 30 ans',rows:[
+      ['Facture fournisseur','20 255 203,57 €','13 422 157,44 €'],
+      ['Autoconsommation','—','6 089 559,31 €'],
+      ['Accise','6 840 127,03 €','4 532 625,98 €'],
+      ['Plus-value TURPE','—','135 706,77 €'],
+      ['Économie globale','—','2 915 281,11 €']
+    ]},
+    'Projet 2':{period:'Électricité et accise, la première année',rows:[
+      ['Électricité du fournisseur / complément couvert par le réseau','108 884,86 €','32 223,10 €'],
+      ["Couvert par l'installation",'—','60 234,24 €'],
+      ['Accise','20 058,15 €','5 935,96 €'],
+      ['Économie','—','30 549,71 €']
+    ]}
+  };
+  for(const [name,data] of Object.entries(comparisons))edit(name,html=>{
+    const start=html.indexOf('<sc-if value="{{ detOpen');
+    if(start<0)throw Error('Détails absents : '+name);
+    let front=html.slice(0,start),panel=html.slice(start);
+    // Masquer uniquement les euros du schéma, jamais le montant principal ni ses caractéristiques.
+    const chartStart=front.indexOf('<div role="img"');
+    if(chartStart<0)throw Error('Schéma absent : '+name);
+    const diagram=front.slice(chartStart).replace(/aria-label="[^"]*"/,'aria-label="Comparaison sans et avec autoconsommation collective. Montants disponibles dans les détails."')
+      .replace(/\d[\d\s\u00a0\u202f]*(?:,\d+)?\s*€/g,'')
+      .replace(/(?:<br>\s*)+(?=<\/div>)/g,'');
+    front=front.slice(0,chartStart)+diagram;
+    const rows=data.rows.map(row=>'<tr>'+row.map((value,i)=>'<'+(i?'td':'th')+' style="padding:12px 16px;text-align:'+(i?'right':'left')+';border-bottom:1px solid #4a4a47;font-weight:'+(i?'400':'500')+';'+(i?'white-space:nowrap;':'')+'">'+value+'</'+(i?'td':'th')+'>').join('')+'</tr>').join('');
+    const comparison='<div style="flex:0 0 auto;margin:0 0 20px"><h4 style="margin:0 0 12px;font-size:28px;font-weight:500;color:#f7a600">'+data.period+'</h4><table style="width:100%;border-collapse:collapse;font-size:25px;line-height:1.3;font-variant-numeric:tabular-nums"><thead><tr><th style="padding:12px 16px;text-align:left"></th><th scope="col" style="padding:12px 16px;text-align:right">Sans ACC</th><th scope="col" style="padding:12px 16px;text-align:right;color:#f7a600">Avec ACC</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    const close=panel.indexOf('</button>'),headerEnd=panel.indexOf('</div>',close)+6;
+    if(close<0||headerEnd<6)throw Error('En-tête des détails absent : '+name);
+    panel=panel.slice(0,headerEnd)+comparison+panel.slice(headerEnd);
+    panel=panel.replace('position: absolute; inset: 0;','position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain;')
+      .replace('flex: 1; min-height: 0; display: grid;','flex: 0 0 auto; display: grid;');
+    return front+panel;
+  });
+  edit('Projet 3',html=>html.replace(/\s*<button\b[^>]*sc-camel-on-click="\{\{ openDetP3 \}\}"[^>]*>[\s\S]*?<\/button>/,'')
+    .replace(/\s*<sc-if value="\{\{ detOpenP3 \}\}"[\s\S]*?<\/sc-if>/,''));
+  node.textContent=JSON.stringify(source);
+})();
+</script>
+<script id="batteries-cleanup-20261118">
+(() => {
+  'use strict';
+  const template=document.querySelector('script[type="__bundler/template"]');
+  if(!template)return;
+  let source=JSON.parse(template.textContent);
+  const re=/<section\b[^>]*data-label="Projet 1"[\s\S]*?<\/section>/;
+  if(!re.test(source))throw Error('Exemple 154 sites introuvable');
+  source=source.replace(re,html=>{
+    const split=html.indexOf('<sc-if value="{{ detOpenP1 }}"');
+    if(split<0)throw Error('Détails du premier exemple introuvables');
+    let front=html.slice(0,split),panel=html.slice(split);
+    // Hauteur légèrement augmentée à la demande de l’utilisatrice, sans changer les montants.
+    let highlighted=false;
+    front=front.replace(/<div style="([^"]*)">Économie globale<\/div>/,(all,style)=>{
+      highlighted=true;
+      return '<div style="'+style.replace('height: 59.4px','height: 105px').replace('border: 1px dashed #F7A600','border: 3px solid #F7A600')+';background:rgba(247,166,0,.2);font-weight:700;box-shadow:0 0 0 3px rgba(247,166,0,.15);letter-spacing:.025em">Économie globale</div>';
+    });
+    if(!highlighted)throw Error('Case économies introuvable');
+    front=front.replace(/<div style="([^"]*)">Facture fournisseur<br>avec ACC<\/div>/,(all,style)=>'<div style="'+style.replace(/height: [\d.]+px/,'height: 225.3px')+'">Facture fournisseur<br>avec ACC</div>');
+    const row=(label,value,total=false)=>'<tr style="'+(total?'background:rgba(247,166,0,.1);color:#f7a600;font-weight:600;':'')+'"><th scope="row" style="padding:12px 16px;text-align:left;border-bottom:1px solid #4a4a47;font-weight:500">'+label+'</th><td style="padding:12px 16px;text-align:right;border-bottom:1px solid #4a4a47">—</td><td style="padding:12px 16px;text-align:right;border-bottom:1px solid #4a4a47;white-space:nowrap">'+value+'</td></tr>';
+    const tableEnd=panel.indexOf('</tbody></table>');
+    if(tableEnd<0)throw Error('Comparatif absent');
+    const newRows=row('Économie sur accise','2 307 501,05 €')+row('Batteries pour stabilisation de réseau','240 000,00 €')+row('Total sur 30 ans','3 155 281,11 €',true);
+    panel=panel.slice(0,tableEnd)+newRows+panel.slice(tableEnd);
+    const financialStart=panel.indexOf('<div style="display: flex; flex-direction: column;"><div style="display: flex; justify-content: space-between;');
+    if(financialStart<0)throw Error('Ancien tableau financier absent');
+    let depth=0,financialEnd=-1;
+    for(const tag of panel.slice(financialStart).matchAll(/<\/?div\b[^>]*>/g)){
+      depth+=tag[0].startsWith('</')?-1:1;
+      if(depth===0){financialEnd=financialStart+tag.index+tag[0].length;break;}
+    }
+    if(financialEnd<0)throw Error('Fin du tableau financier absente');
+    panel=panel.slice(0,financialStart)+panel.slice(financialEnd);
+    panel=panel.replace('grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 100px;','grid-template-columns: minmax(0, 1fr); gap: 24px;')
+      .replace('grid-template-columns: 1fr 1fr; gap: 40px 32px;','grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px;')
+      .replace('</table>','</table><p style="margin:14px 16px 0;font-size:22px;color:#b8b8b3">Totaux cumulés sur 30 ans · inflation 2,5 %</p>');
+    return front+panel;
+  });
+  template.textContent=JSON.stringify(source);
+})();
+</script>
+<script id="offers-minimum-20261118">
+(() => {
+  const template=document.querySelector('script[type="__bundler/template"]');
+  if(!template)return;
+  let source=JSON.parse(template.textContent);
+  const before='frame.srcdoc = new TextDecoder().decode(bytes);';
+  if(!source.includes(before))throw Error('Présentation des autres offres introuvable');
+  source=source.replace(before,"frame.srcdoc = new TextDecoder().decode(bytes).replaceAll('2 500 m²','1 500 m²').replaceAll('surface minimale indiquée dans le document source','surface minimale');");
+  template.textContent=JSON.stringify(source);
+})();
+</script>
 </body>
 </html>
