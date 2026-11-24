@@ -597,6 +597,75 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   return await doc.save();
 };
 
+/* Annexe « Liste des sites (PRM) » ajoutée à la fin de l'accord. */
+/* Ajoute l'annexe « Liste des sites (PRM) » à la fin d'un PDFDocument pdf-lib (A4). */
+window.AccAddAnnexe = async function (PDFLib, doc, d) {
+  const { rgb, StandardFonts } = PDFLib;
+  const W = 595.32, H = 841.92, M = 40, CW = W - 2 * M;
+  const navy = rgb(0.122, 0.22, 0.392), grey = rgb(0.35, 0.35, 0.35), black = rgb(0, 0, 0), line = rgb(0.6, 0.6, 0.6);
+  const f = await doc.embedFont(StandardFonts.Helvetica), fb = await doc.embedFont(StandardFonts.HelveticaBold);
+  const enc = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim().split('').map((ch) => { try { f.encodeText(ch); return ch; } catch (_) { return '?'; } }).join('');
+  d = { ...d, denomination: enc(d.denomination), siret: enc(d.siret), rue: enc(d.rue), cp: enc(d.cp), ville: enc(d.ville), civilite: enc(d.civilite), prenom: enc(d.prenom), nom: enc(d.nom), faitA: enc(d.faitA), date: enc(d.date) };
+  const prms = (d.prms || []).map((p) => ({ prm: String(p.prm || '').replace(/\D/g, ''), adresse: enc(p.adresse) })).filter((p) => p.prm);
+  const PER_PAGE = 14;
+  const pagesN = Math.max(1, Math.ceil(prms.length / PER_PAGE));
+  const fit = (t, font, size, max) => { t = String(t || ''); if (font.widthOfTextAtSize(t, size) <= max) return t; while (t && font.widthOfTextAtSize(t + '…', size) > max) t = t.slice(0, -1); return t + '…'; };
+  const wrap = (t, font, size, max) => { const out = []; let cur = ''; for (const w of String(t).split(/\s+/)) { const n = cur ? cur + ' ' + w : w; if (font.widthOfTextAtSize(n, size) > max && cur) { out.push(cur); cur = w; } else cur = n; } if (cur) out.push(cur); return out; };
+  const bar = (pg, y, label) => { pg.drawRectangle({ x: M, y: y - 16, width: CW, height: 16, color: navy }); pg.drawText(label, { x: M + 5, y: y - 12, size: 9.5, font: fb, color: rgb(1, 1, 1) }); return y - 16; };
+  const kv = (pg, x, y, k, v, w) => { pg.drawText(k, { x, y, size: 9, font: f, color: black }); const kw = f.widthOfTextAtSize(k, 9); pg.drawText(fit(v || '—', fb, 9, w - kw - 4), { x: x + kw + 3, y, size: 9, font: fb, color: black }); };
+  for (let pi = 0; pi < pagesN; pi++) {
+    const pg = doc.addPage([W, H]);
+    let y = H - 48;
+    pg.drawText('ANNEXE À L’ACCORD DE COMMUNICATION À UN TIERS DES DONNÉES', { x: M, y, size: 11.5, font: fb, color: black }); y -= 15;
+    pg.drawText('LISTE DES SITES CONCERNÉS (PRM) – COMPLÉMENT AU CADRE D', { x: M, y, size: 11.5, font: fb, color: black }); y -= 16;
+    for (const l of wrap('Cette annexe fait partie de l’accord signé par le Client désigné ci-dessous au profit d’Enogrid (tiers collecteur). Elle liste les sites identifiés à la date de signature. Elle complète le cadre D de l’accord sans en limiter la portée.', f, 8.5, CW)) { pg.drawText(l, { x: M, y, size: 8.5, font: f, color: grey }); y -= 11; }
+    y -= 6;
+    y = bar(pg, y, 'Client');
+    const boxTop = y; y -= 14;
+    kv(pg, M + 6, y, 'Dénomination sociale : ', d.denomination, CW / 2 + 40); kv(pg, M + CW / 2 + 50, y, 'SIRET : ', d.siret, CW / 2 - 56); y -= 14;
+    kv(pg, M + 6, y, 'Adresse : ', [d.rue, d.cp, d.ville].filter(Boolean).join(' '), CW - 12); y -= 14;
+    kv(pg, M + 6, y, 'Représenté par : ', [d.civilite, d.prenom, d.nom].filter(Boolean).join(' '), CW - 12); y -= 8;
+    pg.drawRectangle({ x: M, y, width: CW, height: boxTop - y, borderColor: navy, borderWidth: 0.8 });
+    y -= 14;
+    y = bar(pg, y, 'Liste des sites d’électricité raccordés au réseau public de distribution' + (pagesN > 1 ? '  (page ' + (pi + 1) + ' sur ' + pagesN + ')' : ''));
+    const cols = [{ t: 'N°', w: 28 }, { t: 'N° PRM (14 chiffres)', w: 150 }, { t: 'Adresse du site', w: CW - 178 }];
+    const rowH = 22;
+    let x = M;
+    pg.drawRectangle({ x: M, y: y - rowH, width: CW, height: rowH, color: rgb(0.9, 0.92, 0.96) });
+    cols.forEach((c) => { pg.drawText(c.t, { x: x + 5, y: y - 14.5, size: 9, font: fb, color: navy }); x += c.w; });
+    const tableTop = y; y -= rowH;
+    const slice = prms.slice(pi * PER_PAGE, (pi + 1) * PER_PAGE);
+    const rows = slice.length;
+    for (let r = 0; r < rows; r++) {
+      const p = slice[r];
+      pg.drawLine({ start: { x: M, y }, end: { x: M + CW, y }, thickness: 0.5, color: line });
+      if (p) {
+        pg.drawText(String(pi * PER_PAGE + r + 1), { x: M + 9, y: y - 14.5, size: 9.5, font: f, color: black });
+        pg.drawText(p.prm, { x: M + 33, y: y - 14.5, size: 10.5, font: fb, color: black });
+        pg.drawText(fit(p.adresse, f, 9.5, cols[2].w - 10), { x: M + 183, y: y - 14.5, size: 9.5, font: f, color: black });
+      }
+      y -= rowH;
+    }
+    pg.drawRectangle({ x: M, y, width: CW, height: tableTop - y, borderColor: navy, borderWidth: 0.8 });
+    pg.drawLine({ start: { x: M + 28, y: tableTop }, end: { x: M + 28, y }, thickness: 0.5, color: line });
+    pg.drawLine({ start: { x: M + 178, y: tableTop }, end: { x: M + 178, y }, thickness: 0.5, color: line });
+    y -= 12;
+    pg.drawText('Nombre total de sites listés : ' + prms.length, { x: M, y, size: 9, font: fb, color: black });
+    pg.drawText('PRM : Point Référence Mesure, numéro à 14 chiffres figurant sur la facture d’électricité ou le compteur Linky.', { x: M, y: y - 12, size: 7.5, font: f, color: grey });
+    if (pi === pagesN - 1) {
+      const sy = 165;
+      pg.drawText('Date', { x: M, y: sy, size: 9.5, font: fb, color: black });
+      pg.drawText('Fait à : ' + (d.faitA || '_______________________'), { x: M, y: sy - 24, size: 9.5, font: f, color: black });
+      pg.drawText('Le : ' + (d.date || '____ / ____ / ________'), { x: M, y: sy - 46, size: 9.5, font: f, color: black });
+      pg.drawText('Signature du Client + cachet le cas échéant', { x: M + 290, y: sy, size: 9.5, font: fb, color: black });
+      pg.drawRectangle({ x: M + 290, y: sy - 105, width: CW - 290, height: 95, borderColor: line, borderWidth: 0.8 });
+    }
+    pg.drawText('Annexe – page ' + (pi + 1) + ' sur ' + pagesN, { x: W - M - 90, y: 28, size: 8, font: f, color: grey });
+  }
+  return doc;
+};
+
+
 /* Panneau « Préparer l'accord Enogrid » : le commercial vérifie les informations,
    la présentation produit le PDF prérempli, à importer ensuite dans Yousign.
    Aucun appel réseau : tout se fait sur la tablette. */
@@ -612,6 +681,9 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   .acc-f label{display:block;font-size:14px;color:#b9b9b4;margin-bottom:5px}
   .acc-f input{width:100%;box-sizing:border-box;font:inherit;font-size:18px;color:#fff;background:#2a2a28;border:1px solid #444441;border-radius:12px;padding:11px 14px;outline:none}
   .acc-f input:focus{border-color:#f7a600}
+  .acc-f textarea{width:100%;box-sizing:border-box;font:inherit;font-size:18px;color:#fff;background:#2a2a28;border:1px solid #444441;border-radius:12px;padding:11px 14px;outline:none;resize:vertical;line-height:1.5}
+  .acc-f textarea:focus{border-color:#f7a600}
+  .acc-f.acc-err textarea{border-color:#ff6b5e}
   .acc-f.acc-err input{border-color:#ff6b5e}
   .acc-sec{grid-column:1/-1;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#8a8a85;margin-top:10px;border-top:1px solid #3a3a37;padding-top:14px}
   .acc-chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -646,6 +718,8 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
     ['rue', 'Adresse *', true, 'full'],
     ['cp', 'Code postal *', true],
     ['ville', 'Commune *', true],
+    ['sec', 'Les sites (PRM)'],
+    ['prm'],
     ['sec', 'Le signataire'],
     ['civ'],
     ['nom', 'Nom *', true],
@@ -704,22 +778,29 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   }
   function stepsHtml(name, d) {
     const who = [d.prenom, d.nom].filter(Boolean).join(' ');
+    const csvOk = !!(d.prenom && d.nom && d.mail);
     return `<div class="acc-kick">Equisolar · Accord Enogrid</div><h2>Accord prérempli prêt</h2>
-      <p class="acc-sub">Le fichier <b style="color:#fff">${esc(name)}</b> vient d’être téléchargé sur la tablette (dossier Téléchargements).</p>
-      <div class="acc-sig"><div class="acc-sig-t">Signataire à indiquer dans Yousign</div><div>Prénom et nom : <b>${esc(who) || '—'}</b></div><div class="acc-sig-m">E-mail : <b>${esc(d.mail) || '—'}</b>${d.mail ? ' <button class="acc-btn acc-ghost acc-small" data-acc="copymail">Copier l’e-mail</button>' : ''}</div>${(d.prenom && d.nom && d.mail) ? '<div class="acc-sig-m">Contact Yousign (CSV) : téléchargé avec l’accord <button class="acc-btn acc-ghost acc-small" data-acc="csv">Télécharger le CSV à nouveau</button></div><div class="acc-note">À importer dans Yousign : Paramètres › Contacts › Importer depuis CSV. Yousign ne gère pas les doublons : n’importez le contact qu’une fois.</div>' : '<div class="acc-note">Pas de CSV contact : il faut le prénom, le nom et l’e-mail du signataire.</div>'}</div>
+      <p class="acc-sub">Téléchargez les fichiers sur la tablette : un appui par bouton. Ils arrivent dans l’app <b style="color:#fff">Fichiers</b> › Téléchargements.</p>
+      <div class="acc-act" style="margin-top:6px">
+        <button class="acc-btn" data-acc="pdf">Télécharger l’accord (PDF)</button>
+        ${csvOk ? '<button class="acc-btn" data-acc="csv">Télécharger le contact Yousign (CSV)</button>' : '<span class="acc-msg">Contact Yousign (CSV) indisponible : prénom, nom et e-mail du signataire requis.</span>'}
+      </div>
+      ${canShare() ? '<p class="acc-sub" style="margin-top:4px">Le téléchargement ne démarre pas ? <button class="acc-btn acc-ghost acc-small" data-acc="share">Partager / Enregistrer dans Fichiers</button></p>' : ''}
+      <div class="acc-sig"><div class="acc-sig-t">Signataire à indiquer dans Yousign</div><div>Prénom et nom : <b>${esc(who) || '—'}</b></div><div class="acc-sig-m">E-mail : <b>${esc(d.mail) || '—'}</b>${d.mail ? ' <button class="acc-btn acc-ghost acc-small" data-acc="copymail">Copier l’e-mail</button>' : ''}</div><div class="acc-note">Contact CSV à importer dans Yousign : Paramètres › Contacts › Importer depuis CSV. Yousign ne gère pas les doublons : n’importez le contact qu’une fois.</div></div>
       <ol class="acc-steps">
-        <li>Ouvrez <b>Yousign</b>, puis <b>Nouvelle invitation</b>, et importez ce fichier.</li>
-        <li>Ajoutez le signataire : tapez son prénom et son nom, et <b>collez son e-mail</b> (bouton « Copier l’e-mail » ci-dessus). Placez sa <b>signature en page 2</b>, dans la case « Signature du Client ».</li>
+        <li>Ouvrez <b>Yousign</b>, puis <b>Nouvelle invitation</b>, et importez le PDF <b>${esc(name)}</b>.</li>
+        <li>Ajoutez le signataire : tapez son prénom et son nom, et <b>collez son e-mail</b> (bouton « Copier l’e-mail » ci-dessus). Placez sa <b>signature en page 2</b>, dans la case « Signature du Client »${(d.prmList && d.prmList.length) ? ', puis <b>en page ' + (2 + Math.ceil(d.prmList.length / 14)) + '</b> dans la case « Signature du Client » de l’annexe PRM' : ''}.</li>
         <li>Faites signer <b>sur la tablette</b>, ou envoyez la demande <b>par e-mail</b>.</li>
         <li>Une fois l’accord signé : téléchargez le PDF signé depuis Yousign et déposez-le dans la fiche Airtable, champ <b>« Accord Enogrid signé »</b>. Le statut passe tout seul à « Accord Enogrid signé ».</li>
       </ol>
       <div class="acc-act">
         <a class="acc-btn" href="https://yousign.app" target="_blank" rel="noopener">Ouvrir Yousign ↗</a>
-        <button class="acc-btn acc-ghost" data-acc="again">Télécharger à nouveau</button>
         <button class="acc-btn acc-ghost" data-acc="close">Fermer</button>
       </div>`;
   }
-
+  function canShare() {
+    try { return !!(navigator.share && navigator.canShare && navigator.canShare({ files: [new File(['x'], 'x.pdf', { type: 'application/pdf' })] })); } catch (_) { return false; }
+  }
   function open(initial) {
     close();
     const d = { type: '', civilite: '', habilite: false, ...(initial || {}) };
@@ -730,6 +811,7 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
     ov.setAttribute('aria-modal', 'true');
     const fields = FIELDS.map(([k, label, req, wide]) => {
       if (k === 'sec') return `<div class="acc-sec">${esc(label)}</div>`;
+      if (k === 'prm') return `<div class="acc-f acc-full" data-prm="1"><label>N° PRM (14 chiffres), un par ligne. Facultatif : l’adresse du site après le numéro (sinon l’adresse du client). Laissez vide s’il n’y a pas d’annexe.</label><textarea rows="3" inputmode="text" autocomplete="off" placeholder="30001234567890\n30009876543210 ZA du Moulin, 59195 Oisy">${esc((d.prms || []).join('\n'))}</textarea></div>`;
       if (k === 'civ') return `<div class="acc-f acc-full"><label>Civilité du signataire</label><div class="acc-chips">${['M.', 'Mme'].map((c) => `<button type="button" class="acc-chip" data-civ="${c}" aria-pressed="${d.civilite === c}">${c}</button>`).join('')}</div></div>`;
       if (k === 'hab') return `<label class="acc-chk acc-full" data-k="habilite"><input type="checkbox" ${d.habilite ? 'checked' : ''}> <span>Le signataire déclare être dûment habilité par sa structure pour signer ce document. * <span style="color:#8a8a85">(case à faire cocher par le client)</span></span></label>`;
       return `<div class="acc-f${wide ? ' acc-full' : ''}" data-k="${k}"><label>${esc(label)}</label><input type="text" value="${esc(d[k])}" ${req ? 'data-req="1"' : ''} autocomplete="off" ${['siret', 'cp', 'tel'].includes(k) ? 'inputmode="numeric"' : ''}${k === 'mail' ? ' inputmode="email"' : ''}></div>`;
@@ -770,8 +852,15 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
       const act = t.dataset.acc;
       if (act === 'close') { close(); return; }
       if (act === 'blank') { download(pdfBytes(), 'Accord Enogrid (vierge).pdf'); return; }
-      if (act === 'again') { if (lastBytes) download(lastBytes, lastName); return; }
-      if (act === 'csv') { downloadCsv(d); t.textContent = 'CSV téléchargé ✓'; return; }
+      if (act === 'pdf') { if (lastBytes) { download(lastBytes, lastName); t.textContent = 'Accord téléchargé ✓ (appuyer pour recommencer)'; } return; }
+      if (act === 'share') {
+        if (!lastBytes) return;
+        const files = [new File([lastBytes], lastName, { type: 'application/pdf' })];
+        if (d.prenom && d.nom && d.mail) files.push(new File([contactCsv(d)], 'Contact Yousign - ' + safeName(d.denomination) + '.csv', { type: 'text/csv' }));
+        try { await navigator.share({ files: files }); } catch (_) {}
+        return;
+      }
+      if (act === 'csv') { downloadCsv(d); t.textContent = 'Contact téléchargé ✓ (appuyer pour recommencer)'; return; }
       if (act === 'copymail') {
         const txt = d.mail || '';
         let ok = false;
@@ -789,14 +878,19 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
       hab.classList.toggle('acc-err', !d.habilite);
       if (missing || !d.habilite) { msg.textContent = missing ? 'Complétez les champs marqués d’une *' : 'Le client doit cocher la case d’habilitation'; return; }
       if (d.siret && d.siret.replace(/\s/g, '').length !== 14) { msg.textContent = 'Le SIRET doit faire 14 chiffres (ou laissez-le vide)'; ov.querySelector('[data-k="siret"]').classList.add('acc-err'); return; }
+      { const box = ov.querySelector('[data-prm]'); const lines = box ? box.querySelector('textarea').value.split(/\n+/).map((l) => l.trim()).filter(Boolean) : [];
+        const addr = [d.rue, d.cp, d.ville].filter(Boolean).join(' '); const list = []; let bad = false;
+        lines.forEach((l) => { const m = /^((?:\d[\s.]*){14})(.*)$/.exec(l); const rest = m ? m[2].trim() : ''; if (!m || /^\d/.test(rest)) { bad = true; return; } list.push({ prm: m[1].replace(/\D/g, ''), adresse: rest.replace(/^[;,:\-–—\s]+/, '').trim() || addr }); });
+        if (box) box.classList.toggle('acc-err', bad);
+        if (bad) { msg.textContent = 'Chaque ligne PRM doit commencer par un numéro de 14 chiffres'; return; }
+        d.prmList = list; }
       if (!window.PDFLib || !window.AccFillAccord) { msg.textContent = 'Module PDF indisponible : rechargez la présentation'; return; }
       msg.textContent = '';
       t.disabled = true; t.textContent = 'Création…';
       try {
         lastBytes = await window.AccFillAccord(window.PDFLib, pdfBytes(), { ...d, date: today(), faitA: d.faitA || d.ville });
+        if (d.prmList && d.prmList.length && window.AccAddAnnexe) { const doc = await window.PDFLib.PDFDocument.load(lastBytes); await window.AccAddAnnexe(window.PDFLib, doc, { ...d, prms: d.prmList, date: today(), faitA: d.faitA || d.ville }); lastBytes = await doc.save(); }
         lastName = 'Accord Enogrid - ' + safeName(d.denomination) + '.pdf';
-        download(lastBytes, lastName);
-        if (d.prenom && d.nom && d.mail) setTimeout(() => { try { downloadCsv(d); } catch (_) {} }, 600);
         ov.querySelector('.acc-box').innerHTML = stepsHtml(lastName, d);
       } catch (err) {
         console.warn('[CRM ACC] accord non généré', err);
@@ -1288,6 +1382,72 @@ window.AccFillAccord = async function (PDFLib, bytes, d) {
   if(!source.includes(before))throw Error('Présentation des autres offres introuvable');
   source=source.replace(before,"frame.srcdoc = new TextDecoder().decode(bytes).replaceAll('2 500 m²','1 500 m²').replaceAll('surface minimale indiquée dans le document source','surface minimale');");
   template.textContent=JSON.stringify(source);
+})();
+</script>
+<script id="rdv-tablette-20261120">
+/* Formulaire « Votre site » : deux boutons séparés. « Ouvrir la carte » ouvre seulement la carte
+   des adresses ; « Enregistrer » enregistre seulement la fiche (sans ouvrir la carte). */
+(() => {
+  const node = document.querySelector('script[type="__bundler/template"]');
+  if (!node) return;
+  let s;
+  try { s = JSON.parse(node.textContent); } catch (_) { return; }
+  const one = (a) => s.split(a).length === 2;
+  const saveLine = "        if (!openCarte()) return;\n";
+  const oldBtn = '<button sc-camel-on-click="{{ save }}" style="font-family: \'Rubik\', sans-serif; font-size: 22px; font-weight: 500; padding: 12px 24px; border-radius: 999px; cursor: pointer; background: #f7a600; color: #1d1d1b; border: none;" style-hover="background: #ffffff;">Enregistrer · suivant</button>';
+  if (!one(saveLine) || !one(oldBtn)) { console.warn('[RDV tablette] boutons laissés tels quels : repères introuvables'); return; }
+  const carteBtn = '<button sc-camel-on-click="{{ openCarte }}" style="font-family: \'Rubik\', sans-serif; font-size: 22px; font-weight: 500; padding: 10px 22px; border-radius: 999px; cursor: pointer; background: transparent; color: #f7a600; border: 2px solid #f7a600;" style-hover="background: #f7a600; color: #1d1d1b;">Ouvrir la carte ↗</button>';
+  const saveBtn = '<button sc-camel-on-click="{{ save }}" style="font-family: \'Rubik\', sans-serif; font-size: 22px; font-weight: 500; padding: 12px 24px; border-radius: 999px; cursor: pointer; background: #f7a600; color: #1d1d1b; border: none;" style-hover="background: #ffffff;">Enregistrer</button>';
+  /* La fiche se vide après « Enregistrer » : la carte reprend alors la dernière fiche enregistrée. */
+  const carteHead = "    const openCarte = () => {\n      const adr = adresse;\n      if (!adresseOk) {";
+  if (one(carteHead)) {
+    s = s.replace(carteHead, () => "    const openCarte = () => {\n      const g = adresseOk ? null : this._crmLastF;\n      if (g) {\n        const t = (v) => String(v || '').trim();\n        if (!(t(g.rue) && /^\\d{5}$/.test(t(g.cp)) && t(g.ville))) { this.setState({ flash: 'Rue, code postal (5 chiffres) et ville requis' }); return false; }\n        const c = parsePositive(g.consoKwh), tv = parsePositive(g.tarif);\n        const q = new URLSearchParams({ site: [g.rue, g.cp, g.ville].map(t).join(' ') });\n        if (t(g.entreprise)) q.set('nom', t(g.entreprise));\n        if (c !== null && !Number.isNaN(c)) q.set('conso_kwh', String(c));\n        if (tv !== null && !Number.isNaN(tv)) { q.set('tarif', String(tv)); q.set('tarif_unite', g.tarifUnite === 'kwh' ? 'kwh' : 'mwh'); }\n        window.open('https://brihayelou.github.io/carte-adresses/?' + q.toString(), '_blank');\n        return true;\n      }\n      const adr = adresse;\n      if (!adresseOk) {");
+  } else console.warn('[RDV tablette] carte après enregistrement : repère introuvable');
+  s = s.replace(saveLine, () => '');
+  s = s.replace(oldBtn, () => carteBtn + '\n      ' + saveBtn);
+  node.textContent = JSON.stringify(s);
+})();
+</script>
+<script id="prm-20261123">
+/* PRM (numéros de compteur, 14 chiffres) : saisis dans la fiche rendez-vous (« + Ajouter un PRM »),
+   envoyés au CRM (scénario Make 2, champ PRM), relus au préremplissage (scénario 3)
+   et repris dans l'annexe de l'accord Enogrid. */
+(() => {
+  const node = document.querySelector('script[type="__bundler/template"]');
+  if (!node) return;
+  let s;
+  try { s = JSON.parse(node.textContent); } catch (_) { return; }
+  const edits = [
+    ['<label style="display: flex; flex-direction: column; gap: 6px; min-width: 0;"><span style="font-size: 18px; color: #b8b8b3;">Notes</span>',
+     String.raw`<div style="display: flex; flex-direction: column; gap: 6px;"><span style="font-size: 18px; color: #b8b8b3;">N° PRM <small style="font-size: 15px; color: #8a8a85;">(14 chiffres, sur la facture ou le compteur Linky)</small></span><div style="display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;"><sc-for list="{{ prmRows }}" as="p" hint-placeholder-count="1"><div style="display: flex; align-items: center; gap: 4px;"><input value="{{ p.v }}" sc-camel-on-change="{{ p.on }}" inputmode="numeric" autocomplete="off" placeholder="14 chiffres" style="font-family: 'Rubik', sans-serif; font-size: 19px; color: #ffffff; background: #1d1d1b; border: 2px solid {{ p.bc }}; border-radius: 10px; padding: 6px 10px; outline: none; width: 200px; box-sizing: border-box;"><button sc-camel-on-click="{{ p.del }}" aria-label="Retirer ce PRM" style="font-family: 'Rubik', sans-serif; display: {{ p.delShow }}; font-size: 20px; line-height: 1; width: 32px; height: 32px; border-radius: 999px; border: 2px solid #4a4a47; background: transparent; color: #b8b8b3; cursor: pointer; align-items: center; justify-content: center;">×</button></div></sc-for><button sc-camel-on-click="{{ prmAdd }}" style="font-family: 'Rubik', sans-serif; font-size: 18px; padding: 6px 14px; border-radius: 999px; border: 2px solid #f7a600; background: transparent; color: #f7a600; cursor: pointer;">+ Ajouter un PRM</button></div></div>
+    <label style="display: flex; flex-direction: column; gap: 6px; min-width: 0;"><span style="font-size: 18px; color: #b8b8b3;">Notes</span>`],
+    ["    return { openCarte,\n",
+     String.raw`    const prmList = Array.isArray(f.prm) && f.prm.length ? f.prm : [''];
+    const prmDigits = (v) => String(v || '').replace(/\D/g, '');
+    const prmRows = prmList.map((v, i) => ({
+      v: v || '',
+      on: (e) => { const a = [...prmList]; a[i] = String(e.target.value || '').replace(/[^\d ]/g, ''); this._set({ ...this.state.f, prm: a }); },
+      del: () => { const a = prmList.filter((_, j) => j !== i); this._set({ ...this.state.f, prm: a.length ? a : [''] }); },
+      bc: [0, 14].includes(prmDigits(v).length) ? '#4a4a47' : '#e5484d',
+      delShow: prmList.length > 1 ? 'inline-flex' : 'none',
+    }));
+    const prmAdd = () => this._set({ ...this.state.f, prm: [...prmList, ''] });
+    const prmOk = prmList.every((v) => [0, 14].includes(prmDigits(v).length));
+    return { openCarte, prmRows, prmAdd,
+`],
+    ["        const row = { ...f, conso:",
+     "        if (!prmOk) { this.setState({ flash: 'Chaque PRM doit faire 14 chiffres (ou laissez la case vide)' }); return; }\n        const row = { ...f, conso:"],
+    ["horaires: f.horaires || '', notes: clean(f.notes) };",
+     String.raw`horaires: f.horaires || '', notes: clean(f.notes), prm: (Array.isArray(f.prm) ? f.prm : []).map((v) => String(v || '').replace(/\D/g, '')).filter((v) => v.length === 14).join('\n') };`],
+    ["    if (data.tarif && !String(cur.tarif || '').trim()) merged.tarifUnite = 'mwh';",
+     String.raw`    if (data.tarif && !String(cur.tarif || '').trim()) merged.tarifUnite = 'mwh';
+    { const jp = txt(j.prm).split(/\s+/).map((v) => v.replace(/\D/g, '')).filter((v) => v.length === 14); const curP = Array.isArray(cur.prm) && cur.prm.some((v) => String(v || '').trim()); if (jp.length && !curP) { merged.prm = jp; n += 1; } }`],
+    ["tel: pick(f.tel, j.tel), mail: pick(f.mail, j.mail) });",
+     String.raw`tel: pick(f.tel, j.tel), mail: pick(f.mail, j.mail), prms: (() => { const a = (Array.isArray(f.prm) ? f.prm : []).map((v) => String(v || '').replace(/\D/g, '')).filter((v) => v.length === 14); return a.length ? a : txt(j.prm).split(/\s+/).map((v) => v.replace(/\D/g, '')).filter((v) => v.length === 14); })() });`],
+  ];
+  for (const [a] of edits) if (s.split(a).length !== 2) { console.warn('[PRM] champ PRM non ajouté : repère introuvable', a.slice(0, 60)); return; }
+  for (const [a, b] of edits) s = s.replace(a, () => b);
+  node.textContent = JSON.stringify(s);
 })();
 </script>
 </body>
